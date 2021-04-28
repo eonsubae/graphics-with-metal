@@ -54,3 +54,17 @@ pipelineDescriptor.vertexDescriptor =
 
 let pipelineState =
   try device.makeRenderPipelineState(descriptor: pipelineDescriptor)
+
+// 1
+guard let commandBuffer = commandQueue.makeCommandBuffer(),
+// 2
+  let renderPassDescriptor = view.currentRenderPassDescriptor,
+// 3
+  let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor:
+    renderPassDescriptor)
+else { fatalError() }
+
+renderEncoder.setRenderPipelineState(pipelineState)
+renderEncoder.setVertexBuffer(mesh.vertexBuffers[0].buffer,
+                              offset: 0, index: 0)
+

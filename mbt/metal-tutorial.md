@@ -206,7 +206,41 @@ let pipelineState =
 지금까지의 작업을 통해 코드는 매 프레임마다 작동한다. MTKView가 프레임마다 코드를 실행하는 메소드를 가지고 있기 때문이다. 하지만 단순히 정적인 뷰를 렌더링하는 것이라면 매 프레임마다 갱신할 필요는 없다. 그래픽 렌더링 작동시 GPU의 궁극적인 작업은 3D 씬에서 단일 텍스쳐 결과물을 만드는 것이다. 이 텍스쳐는 물리 카메라의 디지털 이미지와 유사하다. 이 텍스쳐는 디바이스 스크린에 매 프레임마다 표시될 것이다.
 
 ### 렌더 패스
-4/28일까지
+
+현실감있는 렌더링을 달성하려면 그림자, 빛, 반사를 계산해야 한다. 이것들은 많은 계산이 필요하며 각각의 렌더 패스를 가지고 있다. 예를 들어, 그림자 렌더 패스는 3D 모델들 전체에 렌더링되지만, 그림자 정보 크기만을 다룬다. 그 다음 렌더패스는 모델들 전체의 색상을 다룬다. 그 결과 그림자와 색상이 조합된 최종 텍스쳐가 스크린에 렌더링된다
+
+![render-pass-descriptor](./img/render-pass-descriptor.png)
+
+MTKView는 렌더 패스 디스크립터를 제공한다. 렌더 패스 디스크립터는 drawable이라 불리는 텍스쳐를 가지고 있다.
+
+```swift
+// 1
+guard let commandBuffer = commandQueue.makeCommandBuffer(),
+// 2
+  let renderPassDescriptor = view.currentRenderPassDescriptor,
+// 3
+  let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor:
+	renderPassDescriptor)  
+else { fatalError() } 
+```
+1. 커맨드 버퍼를 만든다. 커맨드 버퍼에는 GPU를 실행하는 커맨드들을 저장한다
+2. 뷰의 렌더 패스 디스크립터의 참조를 얻는다. 디스크립터는 최종 렌더링에 필요한 attachments라고 불리는 데이터를 가진다. 각 attachment는 텍스쳐를 저장 혹은 유지할 정보를 필요로한다. 렌더 패스 디스크립터는 렌더 커맨드 인코더를 생성하는데 사용되곤 한다.
+3. 커맨드 버퍼로부터 렌더 패스 디스크립터를 사용해서 렌더 커맨드 인코더를 얻는다. 렌더 커맨드 인코더는 GPU에서 버텍스들을 그릴 모든 정보들을 가지고 있다
+
+만약 시스템이 커맨드 버퍼나 렌더 인코더 같은 메탈 객체를 생성하는데 실패하면 fatal error가 발생한다. 뷰의 currentRenderPassDescriptor는 특정 프레임에서 작동하지 않을 수도 있고, 렌더링 델리게이트 메소드를 리턴만하게 될 것이다.
+
+```swift
+renderEncoder.setRenderPipelineState(pipelineState)
+```
+* 이 코드는 렌더 인코더에 앞서 세팅해둔 파이프라인 상태를 준다
+
+```swift
+renderEncoder.setVertexBuffer(mesh.vertexBuffers[0].buffer, 
+                              offset: 0, index: 0)
+```
+* 앞서 세팅해둔 구 메쉬는 단순한 버텍스들의 리스트를 포함하고 있는 버퍼를 가지고 있다. 이 메쉬의 버퍼를 렌더 인코더에 넘겨주자
+* offset은 버퍼에 있는 버텍스 정보가 시작하는 위치를 지정하는 속성이다
+* index는 GPU 버텍스 쉐이더 함수가 어떻게 이 버퍼를 찾는데 사용되는 속성이다
 
 ### 서브 메쉬
 
