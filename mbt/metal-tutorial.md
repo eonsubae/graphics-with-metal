@@ -243,6 +243,6 @@ renderEncoder.setVertexBuffer(mesh.vertexBuffers[0].buffer,
 * index는 GPU 버텍스 쉐이더 함수가 어떻게 이 버퍼를 찾는데 사용되는 속성이다
 
 ### 서브 메쉬
-5/1 작성
+5/2 작성
 
 ## 챌린지
